@@ -57,7 +57,7 @@ def connect(sid, environ):
 
 @sio.on('camera')
 def my_message(sid, data):
-  camera_in[data['id']] = data['status']
+  camera_in[data['client_id']] = data['num_cars']
   print('message ', data)
   return "OK", 20
 
@@ -91,10 +91,10 @@ if __name__ == '__main__':
     #  eventlet.wsgi.server(eventlet.listen(('', 5000)), app
   web.run_app(app)
 
-  # if in_size == 4:
-  #   horizental = camera_in[0] + camera_in[2]
-  #   vertical  = camera_in[1] + camera_in[3]
-  #   if horizental > vertical: 
-  #     set_status()
-  #     sleep_time = 20 + horizental//vertical
+  if in_size == 4:
+    horizental = camera_in[0] + camera_in[2]
+    vertical  = camera_in[1] + camera_in[3]
+    if horizental > vertical: 
+      set_status()
+      sleep_time = 20 + horizental//vertical
     

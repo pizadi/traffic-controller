@@ -34,6 +34,8 @@
 
 import eventlet
 import socketio
+import RPi.GPPIO as GPPIO
+import _thread
 
 sio = socketio.AsyncServer()
 # sio.set('transports', ['xhr-polling'])
@@ -44,8 +46,10 @@ from aiohttp import web
 app = web.Application()
 # Binds our Socket.IO server to our Web App
 ## instance
+state = 0
 sio.attach(app)
 in_size = 4
+map_led = {}
 light_status = [None] * in_size
 humidity = 30
 camera_in = [None] * in_size
@@ -87,14 +91,90 @@ def error(sid, data):
 def disconnect(sid):
     print('disconnect ', sid)
 
-if __name__ == '__main__':
-    #  eventlet.wsgi.server(eventlet.listen(('', 5000)), app
-  web.run_app(app)
+def set_lights(state):
+  """
+     G , Y , R , TG, TR
+  C1 0 , 1 , 2 , 3 , 4
+  C2 5 , 6 , 7 , 8 , 9
+  C3 10, 11, 12, 13, 14
+  C4 15, 16, 17, 18, 19
+  """ 
+  LED = [False] * 20
+  
+  if state == 0:
+    LED[0] = True
+    LED[3] = True
+  elif state == 1:
+    LED[0] = True
+    LED[5] = True
+  elif state == 2:
+    LED[5] = True
+    LED[1] = True
+  elif state == 3:
+    LED[5] = True
+    LED[8] = True
+  elif state == 4:
+    LED[6] = True
+  elif state == 5:
+    LED[10] = True
+    LED[13] = True
+  elif state == 6:
+    LED[10] = True
+    LED[15] = True
+  elif state == 7:
+    LED[11] = True
+    LED[15] = True
+  elif state == 8:
+    LED[15] = True
+    LED[18] = True
+  elif state == 9:
+    LED[16] = True
+  
+  for i in range(4):
+    LED[5*i+2] = not (LED[5*i] or LED[5*i+1])
+    LED[5*i+4] = not LED[5*i+3]
+  
+  for i in range(20):
+    GPIO.output(map_led[i], LED[i])
 
+def change_state():
+  while(True):
+    b = 10
+    horizental = camera_in[0] + camera_in[1]
+    vertical  = camera_in[2] + camera_in[3]
+    tot = horizental + vertical
+    if state == 0: 
+      t = b + camera_in[0]/tot
+    elif state == 1:
+      t = b + horizental/tot
+    elif state == 3:
+      t = b + camera_in[1]/tot
+    elif state == 5:
+      t = b + camera_in[2]/tot
+    elif state == 6:
+      t = b + vertical/tot
+    elif state == 8:
+      t = b + camera_in[3]/tot
+    else:
+      t = 5
+    set_state(state)
+    state = (state + 1) % 10
+    time.sleep()
+
+
+def main():
+  web.run_app(app)
+  GPIO.setmode(GPIO.BCM)
+  for i in range(20):
+    map_led[i] = i+5
+    GPIO.setup(map_led[i], GPIO.OUT)
   if in_size == 4:
-    horizental = camera_in[0] + camera_in[2]
-    vertical  = camera_in[1] + camera_in[3]
-    if horizental > vertical: 
-      set_status()
-      sleep_time = 20 + horizental//vertical
+    T = Thread(target = change_state)
+    T.setDaemon(True)  
+    print(state)
+
+if __name__ == '__main__':
+  main()
+    #  eventlet.wsgi.server(eventlet.listen(('', 5000)), app
+
     

@@ -34,7 +34,7 @@
 
 import eventlet
 import socketio
-import RPi.GPPIO as GPPIO
+import RPi.GPIO as GPIO
 import _thread
 
 sio = socketio.AsyncServer()

@@ -12,7 +12,8 @@ from aiohttp import web
 app = web.Application()
 map_colors = {'white': (255, 255, 255), 'green': (51, 165, 50), 'yellow': (247, 181, 0), 'red': (187, 30, 16)} # Green Yellow Red 
 rect, pol, cir = map_colors[0] * 4, map_colors[1] * 4, map_colors[2] * 4
-
+sleep_time = 2
+LED = []
 def show_lcd():
 	pygame.init()
 
@@ -67,13 +68,19 @@ def show_lcd():
 	
 #show_lcd()
 
-@sio.event
-def connect(sid, environ):
-    print('connect ', sid)
+sio = socketio.Client()
 
-@sio.on('light')
-def my_message(sid, light):
-  lights = light['LED']
+@sio.event
+def connect():
+    print('connection established')
+
+@sio.event
+def disconnect():
+    print('disconnected from server')
+
+
+def cb(t, light):
+  lights = light
   for i in range(4):
     if lights[i*5+0]:
       cir[i] = map_colors['green'] 
@@ -86,11 +93,6 @@ def my_message(sid, light):
     else:
       pol[i] = map_colors['red'] 
 
-  return "OK", 200
-
-@sio.on('*')
-def error(sid, data):
-  print(data)
 
 @sio.event
 def disconnect(sid):
@@ -106,9 +108,9 @@ def main():
   time.sleep(5)
   rect, pol, cir = ['blue'] * 4, ['green'] * 4, ['red'] * 4
   sio = socketio.Client()
-  
 
-  web.run_app(app, port=8081)
+  sio = socketio.Client()
+  sio.connect('http://localhost:8080')
   
 
   picap = PiCap()
@@ -117,7 +119,8 @@ def main():
       num_cars = picap.camproc()
       print(num_cars, time.time() - t)
       
-      sio.emit('lights', {'client_id': CLIENT_ID , 'num_cars': num_cars, 'time': t})
+      sio.emit('light', {'client_id': CLIENT_ID}, callback=cb)
+      time.sleep(sleep_time)
       print('sent')
   t.join()
         

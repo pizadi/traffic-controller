@@ -28,12 +28,12 @@ def disconnect():
     print('disconnected from server')
 
 def cb(m, d):
-  print( m, d)
+  print( m, d[0])
 
 
 sio.connect('http://localhost:8080')
 print('hello')
-sio.emit('camera', {'id': 0, 'status': 300}, callback=cb)
+sio.emit('neighbor', {'id': 0}, callback=cb)
 print('sent')
 import time
 time.sleep(0.1)

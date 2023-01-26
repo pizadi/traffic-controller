@@ -34,6 +34,7 @@
 
 import eventlet
 import socketio
+import time
 from threading import *
 # import RPi.GPIO as GPIO
 
@@ -49,10 +50,11 @@ app = web.Application()
 state = 0
 sio.attach(app)
 in_size = 4
+LED = [False] * 20
 map_led = {}
 light_status = [None] * in_size
 humidity = 30
-camera_in = [None] * in_size
+camera_in = [1] * in_size
 neighbor_in = [None] * in_size
 
 @sio.event
@@ -67,9 +69,8 @@ def my_message(sid, data):
 
 @sio.on('neighbor')
 def my_message(sid, data):
-  light_status[light['id']] = light['status']
   print('message ', data)
-  return "OK", 20
+  return 10, LED
 
 @sio.on('humidity')
 def my_message(sid, h):
@@ -91,7 +92,7 @@ def error(sid, data):
 def disconnect(sid):
     print('disconnect ', sid)
 
-def set_lights(state):
+def set_state(state):
   """
      G , Y , R , TG, TR
   C1 0 , 1 , 2 , 3 , 4
@@ -134,18 +135,11 @@ def set_lights(state):
     LED[5*i+2] = not (LED[5*i] or LED[5*i+1])
     LED[5*i+4] = not LED[5*i+3]
   
-  for i in range(20):
-    GPIO.output(map_led[i], LED[i])
+  # for i in range(20):
+  #   GPIO.output(map_led[i], LED[i])
 
 def change_state():
-  @sio.event
-  def connect():
-      print('connection established')
-
-  @sio.event
-  def disconnect():
-      print('disconnected from server')
-  sio.connect('http://localhost:8081')
+  state = 0
   while(True):
     b = 10
     horizental = camera_in[0] + camera_in[1]
@@ -171,8 +165,6 @@ def change_state():
     
 
     
-    sio.emit('light', {'LED': LED})
-        
 
 def main():
   

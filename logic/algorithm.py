@@ -174,13 +174,8 @@ def change_state():
     sio.emit('light', {'LED': LED})
         
 
-def run():
-  web.run_app(app)
-
 def main():
-  WT = Thread(target = run)
-  WT.start()
-  WT.join()
+  
 
 
   print("here")
@@ -191,7 +186,10 @@ def main():
     # GPIO.setup(map_led[i], GPIO.OUT)
   if in_size == 4:
     T = Thread(target = change_state, daemon = True)
+    T.start()
     print(state)
+  web.run_app(app)
+  T.join()
 
 if __name__ == '__main__':
   main()

@@ -34,8 +34,8 @@
 
 import eventlet
 import socketio
-import RPi.GPIO as GPIO
-import _thread
+from threading import *
+# import RPi.GPIO as GPIO
 
 sio = socketio.AsyncServer()
 # sio.set('transports', ['xhr-polling'])
@@ -138,6 +138,14 @@ def set_lights(state):
     GPIO.output(map_led[i], LED[i])
 
 def change_state():
+  @sio.event
+  def connect():
+      print('connection established')
+
+  @sio.event
+  def disconnect():
+      print('disconnected from server')
+  sio.connect('http://localhost:8081')
   while(True):
     b = 10
     horizental = camera_in[0] + camera_in[1]
@@ -159,18 +167,30 @@ def change_state():
       t = 5
     set_state(state)
     state = (state + 1) % 10
-    time.sleep()
+    time.sleep(t)
+    
 
+    
+    sio.emit('light', {'LED': LED})
+        
+
+def run():
+  web.run_app(app)
 
 def main():
-  web.run_app(app)
-  GPIO.setmode(GPIO.BCM)
+  WT = Thread(target = run)
+  WT.start()
+  WT.join()
+
+
+  print("here")
+  # GPIO.setmode(GPIO.BCM)
+  
   for i in range(20):
     map_led[i] = i+5
-    GPIO.setup(map_led[i], GPIO.OUT)
+    # GPIO.setup(map_led[i], GPIO.OUT)
   if in_size == 4:
-    T = Thread(target = change_state)
-    T.setDaemon(True)  
+    T = Thread(target = change_state, daemon = True)
     print(state)
 
 if __name__ == '__main__':

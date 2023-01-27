@@ -50,7 +50,7 @@ def main():
         num_cars = picap.camproc()
         print(num_cars, time.time() - t)
         
-        sio.emit('message', {'client_id': CLIENT_ID , 'num_cars': num_cars, 'time': t})
+        sio.emit('camera', {'client_id': CLIENT_ID , 'num_cars': num_cars, 'time': t})
         print('sent')
         
         

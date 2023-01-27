@@ -55,6 +55,7 @@ LED = [False] * 20
 map_led = {}
 light_status = [None] * in_size
 humidity = 30
+sleep_time = 5
 camera_in = [1] * in_size
 neighbor_in = [None] * in_size
 
@@ -66,7 +67,7 @@ def connect(sid, environ):
 def my_message(sid, data):
   camera_in[data['client_id']] = data['num_cars']
   print('message ', data)
-  return "OK", 20
+  return "OK", 200
 
 @sio.on('neighbor')
 def my_message(sid, data):
@@ -74,16 +75,14 @@ def my_message(sid, data):
   return 10, LED
 
 @sio.on('humidity')
-def my_message(sid, h):
-  humidity = h
-  print('message ', h)
-  return "OK", 200
+def my_message(sid, data):
+  humidity = data['humidity']
+  temperature = data['temprature']
+  print('message ', data)
 
 @sio.on('light')
 def my_message(sid, light):
-  light_status[light['id']] = light['status']
-  print('message ', light)
-  return "OK", 200
+  return sleep_time, LED
 
 @sio.on('*')
 def error(sid, data):
@@ -162,25 +161,19 @@ def change_state():
       t = 5
     set_state(state)
     state = (state + 1) % 10
+    sleep_time = t
     time.sleep(t)
     
 
     
 
 def main():
-  
-
-
-  print("here")
   # GPIO.setmode(GPIO.BCM)
-  
-  for i in range(20):
-    map_led[i] = i+5
-    # GPIO.setup(map_led[i], GPIO.OUT)
-  if in_size == 4:
-    T = Thread(target = change_state, daemon = True)
-    T.start()
-    print(state)
+  # for i in range(20):
+  #   map_led[i] = i+5
+  # GPIO.setup(map_led[i], GPIO.OUT)
+  T = Thread(target = change_state, daemon = True)
+  T.start()
   web.run_app(app)
   T.join()
 

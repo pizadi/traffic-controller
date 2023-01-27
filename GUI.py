@@ -114,14 +114,13 @@ def main():
   sio.connect('http://localhost:8080')
   
 
-  picap = PiCap()
   while True:
       t = time.time()
       num_cars = picap.camproc()
       print(num_cars, time.time() - t)
-      
       sio.emit('light', {'client_id': CLIENT_ID}, callback=cb)
-      time.sleep(sleep_time)
+      time.sleep(sleep_time - 2)
+      sio.emit('light', {'client_id': CLIENT_ID}, callback=cb)
       print('sent')
   t.join()
         

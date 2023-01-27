@@ -58,6 +58,7 @@ humidity = 30
 sleep_time = 5
 camera_in = [1] * in_size
 neighbor_in = [None] * in_size
+neighbor_ips = ['http://192.168.1.15:8080']
 
 @sio.event
 def connect(sid, environ):
@@ -71,7 +72,8 @@ def my_message(sid, data):
 
 @sio.on('neighbor')
 def my_message(sid, data):
-  print('message ', data)
+
+  neighbor_in[data['client_id']] = data['num_cars']
   return 10, LED
 
 @sio.on('humidity')
